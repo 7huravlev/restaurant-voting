@@ -1,0 +1,73 @@
+Index: src/main/resources/application.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/application.yaml	(revision c6417e3dbeb9ae7f3a018bd7a569a03a9acb7290)
++++ src/main/resources/application.yaml	(date 1606225829853)
+@@ -26,4 +26,9 @@
+     #    tcp: jdbc:h2:tcp://localhost:9092/~/voting
+     username: sa
+     password:
+-  h2.console.enabled: true
+\ No newline at end of file
++  h2.console.enabled: true
++
++  data.rest:
++    #  https://docs.spring.io/spring-data/rest/docs/current/reference/html/#getting-started.basic-settings
++    basePath: /api
++    returnBodyOnCreate: true
+\ No newline at end of file
+Index: src/main/java/ru/javaops/bootjava/repository/UserRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/repository/UserRepository.java	(revision c6417e3dbeb9ae7f3a018bd7a569a03a9acb7290)
++++ src/main/java/ru/javaops/bootjava/repository/UserRepository.java	(date 1606225829845)
+@@ -2,6 +2,7 @@
+ 
+ import org.springframework.data.jpa.repository.JpaRepository;
+ import org.springframework.data.jpa.repository.Query;
++import org.springframework.data.rest.core.annotation.RestResource;
+ import org.springframework.transaction.annotation.Transactional;
+ import ru.javaops.bootjava.model.User;
+ 
+@@ -11,8 +12,10 @@
+ @Transactional(readOnly = true)
+ public interface UserRepository extends JpaRepository<User, Integer> {
+ 
++    @RestResource(rel = "by-email", path = "by-email")
+     @Query("SELECT u FROM User u WHERE u.email = LOWER(:email)")
+     Optional<User> findByEmailIgnoreCase(String email);
+ 
++    @RestResource(rel = "by-lastname", path = "by-lastname")
+     List<User> findByLastNameContainingIgnoreCase(String lastName);
+ }
+\ No newline at end of file
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- pom.xml	(revision c6417e3dbeb9ae7f3a018bd7a569a03a9acb7290)
++++ pom.xml	(date 1606225887996)
+@@ -32,7 +32,17 @@
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-validation</artifactId>
+         </dependency>
+-
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-data-rest</artifactId>
++        </dependency>
++        <!--
++                <dependency>
++                    <groupId>org.springframework.data</groupId>
++                    <artifactId>spring-data-rest-hal-browser</artifactId>
++                    <scope>runtime</scope>
++                </dependency>
++        -->
+         <dependency>
+             <groupId>com.h2database</groupId>
+             <artifactId>h2</artifactId>

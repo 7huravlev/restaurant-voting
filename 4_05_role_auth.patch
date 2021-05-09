@@ -1,0 +1,111 @@
+Index: src/main/java/ru/javaops/bootjava/model/Role.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/model/Role.java	(revision 843700ad713183fe76dd2b3815fe139770d9f188)
++++ src/main/java/ru/javaops/bootjava/model/Role.java	(date 1603214410778)
+@@ -3,11 +3,12 @@
+ import org.springframework.security.core.GrantedAuthority;
+ 
+ public enum Role implements GrantedAuthority {
+-    ROLE_USER,
+-    ROLE_ADMIN;
++    USER,
++    ADMIN;
+ 
+     @Override
+     public String getAuthority() {
+-        return name();
++        //   https://stackoverflow.com/a/19542316/548473
++        return "ROLE_" + name();
+     }
+ }
+\ No newline at end of file
+Index: src/main/java/ru/javaops/bootjava/config/WebSecurityConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/config/WebSecurityConfig.java	(revision 843700ad713183fe76dd2b3815fe139770d9f188)
++++ src/main/java/ru/javaops/bootjava/config/WebSecurityConfig.java	(date 1603214410775)
+@@ -6,12 +6,14 @@
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.Configuration;
+ import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+ import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+ import org.springframework.security.core.userdetails.UserDetailsService;
+ import org.springframework.security.core.userdetails.UsernameNotFoundException;
+ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+ import ru.javaops.bootjava.AuthUser;
++import ru.javaops.bootjava.model.Role;
+ import ru.javaops.bootjava.model.User;
+ import ru.javaops.bootjava.repository.UserRepository;
+ 
+@@ -40,4 +42,12 @@
+         auth.userDetailsService(userDetailsService())
+                 .passwordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
+     }
++
++    @Override
++    protected void configure(HttpSecurity http) throws Exception {
++        http.authorizeRequests()
++                .antMatchers("/api/account").hasRole(Role.USER.name())
++                .antMatchers("/api/**").hasRole(Role.ADMIN.name())
++                .and().formLogin();
++    }
+ }
+\ No newline at end of file
+Index: src/main/resources/data.sql
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/data.sql	(revision 843700ad713183fe76dd2b3815fe139770d9f188)
++++ src/main/resources/data.sql	(date 1603214246167)
+@@ -3,6 +3,6 @@
+        ('admin@javaops.ru', 'Admin_First', 'Admin_Last', '{noop}admin');
+ 
+ INSERT INTO USER_ROLE (ROLE, USER_ID)
+-VALUES ('ROLE_USER', 1),
+-       ('ROLE_ADMIN', 2),
+-       ('ROLE_USER', 2);
+\ No newline at end of file
++VALUES ('USER', 1),
++       ('ADMIN', 2),
++       ('USER', 2);
+\ No newline at end of file
+Index: src/main/java/ru/javaops/bootjava/RestaurantVotingApplication.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/RestaurantVotingApplication.java	(revision 843700ad713183fe76dd2b3815fe139770d9f188)
++++ src/main/java/ru/javaops/bootjava/RestaurantVotingApplication.java	(date 1603214441300)
+@@ -1,23 +1,14 @@
+ package ru.javaops.bootjava;
+ 
+ import lombok.AllArgsConstructor;
+-import org.springframework.boot.ApplicationArguments;
+-import org.springframework.boot.ApplicationRunner;
+ import org.springframework.boot.SpringApplication;
+ import org.springframework.boot.autoconfigure.SpringBootApplication;
+-import ru.javaops.bootjava.repository.UserRepository;
+ 
+ @SpringBootApplication
+ @AllArgsConstructor
+-public class RestaurantVotingApplication implements ApplicationRunner {
+-    private final UserRepository userRepository;
++public class RestaurantVotingApplication {
+ 
+     public static void main(String[] args) {
+         SpringApplication.run(RestaurantVotingApplication.class, args);
+     }
+-
+-    @Override
+-    public void run(ApplicationArguments args) {
+-        System.out.println(userRepository.findByLastNameContainingIgnoreCase("last"));
+-    }
+ }

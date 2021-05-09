@@ -1,0 +1,27 @@
+Index: src/main/resources/application.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/application.yaml	(revision 820eb6e9cea7ce2316e5e69b3ea5e6c589227cce)
++++ src/main/resources/application.yaml	(date 1606230851888)
+@@ -33,6 +33,19 @@
+     basePath: /api
+     returnBodyOnCreate: true
+ 
++    #  https://docs.spring.io/spring-boot/docs/current/reference/html/appendix-application-properties.html#security-properties
++  security:
++    user:
++      name: user
++      password: password
++      roles: USER
++
++logging:
++  level:
++    root: WARN
++    ru.javaops.bootjava: DEBUG
++    org.springframework.security.web.FilterChainProxy: DEBUG
++
+ # Jackson Serialization Issue Resolver
+ #  jackson:
+ #    visibility.field: any

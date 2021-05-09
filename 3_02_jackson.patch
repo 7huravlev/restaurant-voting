@@ -1,0 +1,44 @@
+Index: src/main/resources/application.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/application.yaml	(revision 85d629e673e5882d2a9e25af0daaea372785d410)
++++ src/main/resources/application.yaml	(date 1603040431182)
+@@ -31,4 +31,11 @@
+   data.rest:
+     #  https://docs.spring.io/spring-data/rest/docs/current/reference/html/#getting-started.basic-settings
+     basePath: /api
+-    returnBodyOnCreate: true
+\ No newline at end of file
++    returnBodyOnCreate: true
++
++# Jackson Serialization Issue Resolver
++#  jackson:
++#    visibility.field: any
++#    visibility.getter: none
++#    visibility.setter: none
++#    visibility.is-getter: none
+\ No newline at end of file
+Index: src/main/java/ru/javaops/bootjava/model/BaseEntity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/model/BaseEntity.java	(revision 85d629e673e5882d2a9e25af0daaea372785d410)
++++ src/main/java/ru/javaops/bootjava/model/BaseEntity.java	(date 1603040410453)
+@@ -1,5 +1,6 @@
+ package ru.javaops.bootjava.model;
+ 
++import com.fasterxml.jackson.annotation.JsonIgnore;
+ import lombok.*;
+ import org.springframework.data.domain.Persistable;
+ import org.springframework.data.util.ProxyUtils;
+@@ -27,6 +28,7 @@
+         return id;
+     }
+ 
++    @JsonIgnore
+     @Override
+     public boolean isNew() {
+         return id == null;

@@ -1,0 +1,115 @@
+Index: src/main/java/ru/javaops/bootjava/model/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/model/User.java	(revision 3d60c0c25e2aefea83b7f476355d5719e8c9723b)
++++ src/main/java/ru/javaops/bootjava/model/User.java	(date 1606860945537)
+@@ -1,6 +1,10 @@
+ package ru.javaops.bootjava.model;
+ 
++import com.fasterxml.jackson.annotation.JsonProperty;
++import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+ import lombok.*;
++import org.springframework.util.StringUtils;
++import ru.javaops.bootjava.util.JsonDeserializers;
+ 
+ import javax.persistence.*;
+ import javax.validation.constraints.Email;
+@@ -34,6 +38,8 @@
+ 
+     @Column(name = "password")
+     @Size(max = 256)
++    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
++    @JsonDeserialize(using = JsonDeserializers.PasswordDeserializer.class)
+     private String password;
+ 
+     @Enumerated(EnumType.STRING)
+@@ -41,4 +47,8 @@
+     @Column(name = "role")
+     @ElementCollection(fetch = FetchType.EAGER)
+     private Set<Role> roles;
++
++    public void setEmail(String email) {
++        this.email = StringUtils.hasText(email) ? email.toLowerCase() : null;
++    }
+ }
+\ No newline at end of file
+Index: src/main/java/ru/javaops/bootjava/config/WebSecurityConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/config/WebSecurityConfig.java	(revision 3d60c0c25e2aefea83b7f476355d5719e8c9723b)
++++ src/main/java/ru/javaops/bootjava/config/WebSecurityConfig.java	(date 1606860923164)
+@@ -9,9 +9,11 @@
+ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+ import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
++import org.springframework.security.config.http.SessionCreationPolicy;
+ import org.springframework.security.core.userdetails.UserDetailsService;
+ import org.springframework.security.core.userdetails.UsernameNotFoundException;
+ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
++import org.springframework.security.crypto.password.PasswordEncoder;
+ import ru.javaops.bootjava.AuthUser;
+ import ru.javaops.bootjava.model.Role;
+ import ru.javaops.bootjava.model.User;
+@@ -25,6 +27,7 @@
+ @AllArgsConstructor
+ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+ 
++    public static final PasswordEncoder PASSWORD_ENCODER = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+     private final UserRepository userRepository;
+ 
+     @Bean
+@@ -40,7 +43,7 @@
+     @Autowired
+     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+         auth.userDetailsService(userDetailsService())
+-                .passwordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
++                .passwordEncoder(PASSWORD_ENCODER);
+     }
+ 
+     @Override
+@@ -48,6 +51,8 @@
+         http.authorizeRequests()
+                 .antMatchers("/api/account").hasRole(Role.USER.name())
+                 .antMatchers("/api/**").hasRole(Role.ADMIN.name())
+-                .and().formLogin();
++                .and().httpBasic()
++                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
++                .and().csrf().disable();
+     }
+ }
+\ No newline at end of file
+Index: src/main/java/ru/javaops/bootjava/util/JsonDeserializers.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/util/JsonDeserializers.java	(date 1606235006433)
++++ src/main/java/ru/javaops/bootjava/util/JsonDeserializers.java	(date 1606235006433)
+@@ -0,0 +1,23 @@
++package ru.javaops.bootjava.util;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.ObjectCodec;
++import com.fasterxml.jackson.databind.DeserializationContext;
++import com.fasterxml.jackson.databind.JsonDeserializer;
++import com.fasterxml.jackson.databind.JsonNode;
++import ru.javaops.bootjava.config.WebSecurityConfig;
++
++import java.io.IOException;
++
++public class JsonDeserializers {
++
++    // https://stackoverflow.com/a/60995048/548473
++    public static class PasswordDeserializer extends JsonDeserializer<String> {
++        public String deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
++            ObjectCodec oc = jsonParser.getCodec();
++            JsonNode node = oc.readTree(jsonParser);
++            String rawPassword = node.asText();
++            return WebSecurityConfig.PASSWORD_ENCODER.encode(rawPassword);
++        }
++    }
++}

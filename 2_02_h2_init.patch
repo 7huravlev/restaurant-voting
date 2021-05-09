@@ -1,0 +1,149 @@
+Index: src/main/resources/application.properties
+===================================================================
+--- src/main/resources/application.properties	(revision ee6e8d0897d8dc93367b42cb03e86d937a979c26)
++++ src/main/resources/application.properties	(revision ee6e8d0897d8dc93367b42cb03e86d937a979c26)
+@@ -1,10 +0,0 @@
+-# https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+-# JPA
+-spring.jpa.show-sql=true
+-spring.jpa.open-in-view=false
+-#  http://docs.jboss.org/hibernate/orm/5.3/userguide/html_single/Hibernate_User_Guide.html#configurations
+-spring.jpa.properties.hibernate.default_batch_fetch_size=20
+-spring.jpa.properties.hibernate.format_sql=true
+-# https://stackoverflow.com/questions/21257819/what-is-the-difference-between-hibernate-jdbc-fetch-size-and-hibernate-jdbc-batc
+-spring.jpa.properties.hibernate.jdbc.batch_size=20
+-
+Index: src/main/java/ru/javaops/bootjava/config/AppConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/config/AppConfig.java	(date 1602967405106)
++++ src/main/java/ru/javaops/bootjava/config/AppConfig.java	(date 1602967405106)
+@@ -0,0 +1,26 @@
++package ru.javaops.bootjava.config;
++
++import lombok.extern.slf4j.Slf4j;
++import org.h2.tools.Server;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++
++import java.sql.SQLException;
++
++@Configuration
++@Slf4j
++public class AppConfig {
++
++/*
++    @Bean(initMethod = "start", destroyMethod = "stop")
++    public Server h2WebServer() throws SQLException {
++        return Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082");
++    }
++*/
++
++    @Bean(initMethod = "start", destroyMethod = "stop")
++    public Server h2Server() throws SQLException {
++        log.info("Start H2 TCP server");
++        return Server.createTcpServer("-tcp", "-tcpAllowOthers", "-tcpPort", "9092");
++    }
++}
+Index: src/main/resources/application.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/application.yaml	(date 1602967334236)
++++ src/main/resources/application.yaml	(date 1602967334236)
+@@ -0,0 +1,30 @@
++#  https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
++spring:
++  jpa:
++    show-sql: true
++    open-in-view: false
++    hibernate:
++      ddl-auto: create-drop
++    properties:
++      #  http://docs.jboss.org/hibernate/orm/5.3/userguide/html_single/Hibernate_User_Guide.html#configurations
++      hibernate:
++        format_sql: true
++        default_batch_fetch_size: 20
++        # https://stackoverflow.com/questions/21257819/what-is-the-difference-between-hibernate-jdbc-fetch-size-and-hibernate-jdbc-batc
++        jdbc.batch_size: 20
++        id.new_generator_mappings: false
++  datasource:
++    # ImMemory
++    url: jdbc:h2:mem:voting
++    #    tcp: jdbc:h2:tcp://localhost:9092/mem:voting
++    # Absolute path
++    #    url: jdbc:h2:C:/projects/bootjava/restorant-voting/db/voting
++    #    tcp: jdbc:h2:tcp://localhost:9092/C:/projects/bootjava/restorant-voting/db/voting
++    # Relative path form current dir
++    #    url: jdbc:h2:./db/voting
++    # Relative path from home
++    #    url: jdbc:h2:~/voting
++    #    tcp: jdbc:h2:tcp://localhost:9092/~/voting
++    username: sa
++    password:
++  h2.console.enabled: true
+\ No newline at end of file
+Index: src/main/resources/data.sql
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/data.sql	(date 1603033339840)
++++ src/main/resources/data.sql	(date 1603033339840)
+@@ -0,0 +1,8 @@
++INSERT INTO USERS (EMAIL, FIRST_NAME, LAST_NAME, PASSWORD)
++VALUES ('user@gmail.com', 'User_First', 'User_Last', 'password'),
++       ('admin@javaops.ru', 'Admin_First', 'Admin_Last', 'admin');
++
++INSERT INTO USER_ROLE (ROLE, USER_ID)
++VALUES ('ROLE_USER', 1),
++       ('ROLE_ADMIN', 2),
++       ('ROLE_USER', 2);
+\ No newline at end of file
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- pom.xml	(revision ee6e8d0897d8dc93367b42cb03e86d937a979c26)
++++ pom.xml	(date 1602967346468)
+@@ -35,7 +35,6 @@
+         <dependency>
+             <groupId>com.h2database</groupId>
+             <artifactId>h2</artifactId>
+-            <scope>runtime</scope>
+         </dependency>
+         <dependency>
+             <groupId>org.projectlombok</groupId>
+Index: src/main/java/ru/javaops/bootjava/RestaurantVotingApplication.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javaops/bootjava/RestaurantVotingApplication.java	(revision ee6e8d0897d8dc93367b42cb03e86d937a979c26)
++++ src/main/java/ru/javaops/bootjava/RestaurantVotingApplication.java	(date 1602967366492)
+@@ -5,12 +5,8 @@
+ import org.springframework.boot.ApplicationRunner;
+ import org.springframework.boot.SpringApplication;
+ import org.springframework.boot.autoconfigure.SpringBootApplication;
+-import ru.javaops.bootjava.model.Role;
+-import ru.javaops.bootjava.model.User;
+ import ru.javaops.bootjava.repository.UserRepository;
+ 
+-import java.util.Set;
+-
+ @SpringBootApplication
+ @AllArgsConstructor
+ public class RestaurantVotingApplication implements ApplicationRunner {
+@@ -22,8 +18,6 @@
+ 
+     @Override
+     public void run(ApplicationArguments args) {
+-        userRepository.save(new User("user@gmail.com", "User_First", "User_Last", "password", Set.of(Role.ROLE_USER)));
+-        userRepository.save(new User("admin@javaops.ru", "Admin_First", "Admin_Last", "admin", Set.of(Role.ROLE_USER, Role.ROLE_ADMIN)));
+         System.out.println(userRepository.findAll());
+     }
+ }
