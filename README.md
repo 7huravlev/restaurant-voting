@@ -3,6 +3,21 @@ Spring Boot
 
 Contact Nikolay Zhuravlev
 
+### Description
+
+Project of a voting system for deciding where to have lunch.
+
+* 2 types of users: admin and regular users
+* Admin can input a restaurant and it's lunch menu of the day (2-5 items usually, just a dish name and price)
+* Menu changes each day (admins do the updates)
+* Users can vote on which restaurant they want to have lunch at
+* Only one vote counted per user
+* If user votes again the same day:
+    - If it is before 11:00 we assume that he changed his mind.
+    - If it is after 11:00 then it is too late, vote can't be changed
+
+Each restaurant provides a new menu each day.
+
 ## REST API
 
 ### 1. Get All Users
@@ -111,7 +126,7 @@ Contact Nikolay Zhuravlev
 `curl -s http://localhost:8080/api/dishes --user admin@gmail.com:admin`
 
 ### 6. Create Dish
-- URL: /api/dishes
+- URL: /api/dish
 - Method: POST
 - URL Params:
 > {  
@@ -132,4 +147,43 @@ Contact Nikolay Zhuravlev
 > “new”:[Boolean]  
 > }
 
-`curl -s -X POST -d '{"date":"2020-02-01","restaurant":"restaurant4","name":"dish9","price":210}' -H 'Content-Type:application/json;charset=UTF-8' http://localhost:8080/api/dish --user admin@gmail.com:admin`
+`curl -s -X POST -d '{"date":"2021-05-16","restaurant":"restaurant4","name":"dish9","price":210}' -H 'Content-Type:application/json;charset=UTF-8' http://localhost:8080/api/dish --user admin@gmail.com:admin`
+
+### 7. Update Dish
+- URL: /api/dish
+- Method: PUT
+- URL Params:
+> {  
+> “date”:[Date],  
+> “restaurant”:[String],  
+> “name”:[String],  
+> “price”:[Integer]  
+> }
+
+- Success Response:
+> Code: 200 OK  
+
+`curl -s -X PUT -d '{"date":"2021-05-16","restaurant":"restaurant4","name":"dish13 changed","price":730}' -H 'Content-Type:application/json;charset=UTF-8' http://localhost:8080/api/dish/3 --user admin@gmail.com:admin`
+
+### 8. Restaurant vote
+- URL: /api/vote
+- Method: POST
+- URL Params:
+> {  
+> “date_time”:[DateTime],  
+> “restaurant”:[String]  
+> }
+
+- Success Response:
+> Code: 200 OK  
+> Content: {     
+> “id”:[String],  
+> “date_time”:[DateTime],  
+> “restaurant”:[String],  
+> “new”:[Boolean]  
+> }
+
+`curl -s -X POST -d '{"date_time":"2021-05-16T10:30:00.000","restaurant":"restaurant1"}' -H 'Content-Type:application/json;charset=UTF-8' http://localhost:8080/api/vote --user user2@yandex.ru:password`
+
+
+

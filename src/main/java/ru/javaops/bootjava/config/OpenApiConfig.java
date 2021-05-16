@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
         info = @Info(
                 title = "REST API documentation",
                 version = "1.0",
-                description = "Приложение по BootJava",
+                description = "BootJava app",
                 contact = @Contact(name = "Nikolay Zhuravlev", email = "7huravlev@gmail.com")
         ),
         security = @SecurityRequirement(name = "basicAuth")

@@ -1,6 +1,9 @@
 package ru.javaops.bootjava.util;
 
+import ru.javaops.bootjava.error.NotFoundException;
 import ru.javaops.bootjava.model.BaseEntity;
+
+import java.util.Optional;
 
 public class ValidationUtil {
 
@@ -18,4 +21,13 @@ public class ValidationUtil {
             throw new IllegalArgumentException(entity + " must has id=" + id);
         }
     }
+
+    public static <T> T checkNotFoundWithId(Optional<T> optional, int id) {
+        return checkNotFoundWithId(optional, "Entity with id=" + id +" not found");
+    }
+
+    public static <T> T checkNotFoundWithId(Optional<T> optional, String msg) {
+        return optional.orElseThrow(() -> new NotFoundException(msg));
+    }
+
 }
