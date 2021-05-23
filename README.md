@@ -20,6 +20,8 @@ Each restaurant provides a new menu each day.
 
 ## REST API
 
+http://localhost:8080/swagger-ui.html
+
 ### 1. Get All Users
 - URL: /api/users
 - Method: GET
